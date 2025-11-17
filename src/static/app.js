@@ -27,13 +27,38 @@ document.addEventListener("DOMContentLoaded", () => {
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
           <div class="participants-section">
             <p><strong>Participants:</strong></p>
-            ${details.participants.length > 0 
-              ? `<div class="participants-list">${details.participants.map(participant => `<div class="participant-item"><span class="participant-email">${participant}</span><button class="delete-btn" data-activity="${name}" data-participant="${participant}">✖</button></div>`).join('')}</div>`
-              : `<p class="no-participants">No participants yet</p>`
-            }
+            <p><strong>Participants:</strong></p>
+            <div class="participants-list"></div>
           </div>
         `;
 
+        // Safely add participant items to the participants list
+        const participantsListDiv = activityCard.querySelector('.participants-list');
+        if (details.participants.length > 0) {
+          details.participants.forEach(participant => {
+            const participantItem = document.createElement('div');
+            participantItem.className = 'participant-item';
+
+            const emailSpan = document.createElement('span');
+            emailSpan.className = 'participant-email';
+            emailSpan.textContent = participant; // Safe from XSS
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.dataset.activity = name;
+            deleteBtn.dataset.participant = participant;
+            deleteBtn.textContent = '✖';
+
+            participantItem.appendChild(emailSpan);
+            participantItem.appendChild(deleteBtn);
+            participantsListDiv.appendChild(participantItem);
+          });
+        } else {
+          const noParticipants = document.createElement('p');
+          noParticipants.className = 'no-participants';
+          noParticipants.textContent = 'No participants yet';
+          participantsListDiv.appendChild(noParticipants);
+        }
         activitiesList.appendChild(activityCard);
 
         // Add delete button event listeners
