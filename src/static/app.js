@@ -4,6 +4,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
 
+  // Helper function to show messages with auto-hide
+  function showMessage(messageDiv, text, className) {
+    messageDiv.textContent = text;
+    messageDiv.className = className;
+    messageDiv.classList.remove("hidden");
+    setTimeout(() => {
+      messageDiv.classList.add("hidden");
+    }, 5000);
+  }
+
   // Function to fetch activities from API
   async function fetchActivities() {
     try {
@@ -60,32 +70,13 @@ document.addEventListener("DOMContentLoaded", () => {
                   fetchActivities();
                   
                   // Show success message
-                  messageDiv.textContent = result.message;
-                  messageDiv.className = "success";
-                  messageDiv.classList.remove("hidden");
-                  
-                  // Hide message after 5 seconds
-                  setTimeout(() => {
-                    messageDiv.classList.add("hidden");
-                  }, 5000);
+                  showMessage(messageDiv, result.message, "success");
                 } else {
-                  messageDiv.textContent = result.detail || "Failed to unregister participant";
-                  messageDiv.className = "error";
-                  messageDiv.classList.remove("hidden");
-                  
-                  setTimeout(() => {
-                    messageDiv.classList.add("hidden");
-                  }, 5000);
+                  showMessage(messageDiv, result.detail || "Failed to unregister participant", "error");
                 }
               } catch (error) {
-                messageDiv.textContent = "Failed to unregister participant. Please try again.";
-                messageDiv.className = "error";
-                messageDiv.classList.remove("hidden");
+                showMessage(messageDiv, "Failed to unregister participant. Please try again.", "error");
                 console.error("Error unregistering participant:", error);
-                
-                setTimeout(() => {
-                  messageDiv.classList.add("hidden");
-                }, 5000);
               }
             }
           });
@@ -121,27 +112,17 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await response.json();
 
       if (response.ok) {
-        messageDiv.textContent = result.message;
-        messageDiv.className = "success";
         signupForm.reset();
         
         // Refresh the activities to show updated participant list
         fetchActivities();
+        
+        showMessage(messageDiv, result.message, "success");
       } else {
-        messageDiv.textContent = result.detail || "An error occurred";
-        messageDiv.className = "error";
+        showMessage(messageDiv, result.detail || "An error occurred", "error");
       }
-
-      messageDiv.classList.remove("hidden");
-
-      // Hide message after 5 seconds
-      setTimeout(() => {
-        messageDiv.classList.add("hidden");
-      }, 5000);
     } catch (error) {
-      messageDiv.textContent = "Failed to sign up. Please try again.";
-      messageDiv.className = "error";
-      messageDiv.classList.remove("hidden");
+      showMessage(messageDiv, "Failed to sign up. Please try again.", "error");
       console.error("Error signing up:", error);
     }
   });
