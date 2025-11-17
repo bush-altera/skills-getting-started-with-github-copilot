@@ -9,6 +9,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 import os
+import re
 from pathlib import Path
 import re
 
@@ -83,6 +84,16 @@ def is_valid_email(email: str) -> bool:
     """Validate email format using regex pattern"""
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(pattern, email) is not None
+def validate_email(email: str) -> None:
+    """Validate email format and domain"""
+    # Basic email format validation
+    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(email_pattern, email):
+        raise HTTPException(status_code=400, detail="Invalid email format")
+    
+    # Domain validation
+    if not email.endswith("@mergington.edu"):
+        raise HTTPException(status_code=400, detail="Email must be a @mergington.edu address")
 
 
 @app.get("/")
@@ -101,6 +112,8 @@ def signup_for_activity(activity_name: str, email: str):
     # Validate email format
     if not is_valid_email(email):
         raise HTTPException(status_code=400, detail="Invalid email format")
+    # Validate email format and domain
+    validate_email(email)
     
     # Validate student is not already signed up
     for activity in activities.values():
@@ -113,6 +126,10 @@ def signup_for_activity(activity_name: str, email: str):
     # Get the specific activity
     activity = activities[activity_name]
 
+    # Check if activity is at max capacity
+    if len(activity["participants"]) >= activity["max_participants"]:
+        raise HTTPException(status_code=400, detail="Activity is full")
+
     # Add student
     activity["participants"].append(email)
     return {"message": f"Signed up {email} for {activity_name}"}
@@ -124,6 +141,8 @@ def unregister_from_activity(activity_name: str, email: str):
     # Validate email format
     if not is_valid_email(email):
         raise HTTPException(status_code=400, detail="Invalid email format")
+    # Validate email format and domain
+    validate_email(email)
     
     # Validate activity exists
     if activity_name not in activities:
