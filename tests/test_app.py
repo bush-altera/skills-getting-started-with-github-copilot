@@ -104,6 +104,36 @@ class TestSignupEndpoint:
         data = response2.json()
         assert "detail" in data
         assert "already signed up" in data["detail"].lower()
+    
+    def test_signup_when_activity_is_full(self, client, reset_activities):
+        """Test that students cannot sign up when activity is at max capacity"""
+        activity = "Chess Club"
+        
+        # Get initial state
+        initial_response = client.get("/activities")
+        initial_data = initial_response.json()[activity]
+        max_participants = initial_data["max_participants"]
+        current_participants = len(initial_data["participants"])
+        
+        # Fill up the activity to max capacity
+        spots_remaining = max_participants - current_participants
+        for i in range(spots_remaining):
+            email = f"student{i}@mergington.edu"
+            response = client.post(f"/activities/{activity}/signup?email={email}")
+            assert response.status_code == status.HTTP_200_OK
+        
+        # Verify activity is now full
+        after_fill = client.get("/activities")
+        assert len(after_fill.json()[activity]["participants"]) == max_participants
+        
+        # Try to sign up one more student (should fail)
+        overflow_email = "overflow@mergington.edu"
+        response = client.post(f"/activities/{activity}/signup?email={overflow_email}")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        
+        data = response.json()
+        assert "detail" in data
+        assert "full" in data["detail"].lower()
 
 
 class TestUnregisterEndpoint:
