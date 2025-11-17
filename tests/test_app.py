@@ -1,7 +1,6 @@
 """
 Tests for the FastAPI application endpoints
 """
-import pytest
 from fastapi import status
 
 
