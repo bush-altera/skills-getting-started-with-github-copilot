@@ -104,6 +104,41 @@ class TestSignupEndpoint:
         assert "detail" in data
         assert "already signed up" in data["detail"].lower()
     
+    def test_signup_with_invalid_email_format(self, client, reset_activities):
+        """Test signup with invalid email format"""
+        activity = "Chess Club"
+        
+        # Test various invalid email formats
+        invalid_emails = [
+            "notanemail",
+            "@mergington.edu",
+            "missing-domain@",
+            "no-at-symbol.com",
+            "spaces in@email.com"
+        ]
+        
+        for invalid_email in invalid_emails:
+            response = client.post(f"/activities/{activity}/signup?email={invalid_email}")
+            assert response.status_code == status.HTTP_400_BAD_REQUEST
+            data = response.json()
+            assert "detail" in data
+            assert "Invalid email format" in data["detail"]
+    
+    def test_signup_with_wrong_domain(self, client, reset_activities):
+        """Test signup with wrong email domain"""
+        activity = "Chess Club"
+        wrong_domain_emails = [
+            "student@gmail.com",
+            "student@yahoo.com",
+            "student@otherschool.edu"
+        ]
+        
+        for email in wrong_domain_emails:
+            response = client.post(f"/activities/{activity}/signup?email={email}")
+            assert response.status_code == status.HTTP_400_BAD_REQUEST
+            data = response.json()
+            assert "detail" in data
+            assert "@mergington.edu" in data["detail"]
     def test_signup_when_activity_is_full(self, client, reset_activities):
         """Test that students cannot sign up when activity is at max capacity"""
         activity = "Chess Club"
@@ -187,6 +222,42 @@ class TestUnregisterEndpoint:
         data = response.json()
         assert "detail" in data
         assert "not registered" in data["detail"].lower()
+    
+    def test_unregister_with_invalid_email_format(self, client, reset_activities):
+        """Test unregister with invalid email format"""
+        activity = "Chess Club"
+        
+        # Test various invalid email formats
+        invalid_emails = [
+            "notanemail",
+            "@mergington.edu",
+            "missing-domain@",
+            "no-at-symbol.com",
+            "spaces in@email.com"
+        ]
+        
+        for invalid_email in invalid_emails:
+            response = client.delete(f"/activities/{activity}/unregister?email={invalid_email}")
+            assert response.status_code == status.HTTP_400_BAD_REQUEST
+            data = response.json()
+            assert "detail" in data
+            assert "Invalid email format" in data["detail"]
+    
+    def test_unregister_with_wrong_domain(self, client, reset_activities):
+        """Test unregister with wrong email domain"""
+        activity = "Chess Club"
+        wrong_domain_emails = [
+            "student@gmail.com",
+            "student@yahoo.com",
+            "student@otherschool.edu"
+        ]
+        
+        for email in wrong_domain_emails:
+            response = client.delete(f"/activities/{activity}/unregister?email={email}")
+            assert response.status_code == status.HTTP_400_BAD_REQUEST
+            data = response.json()
+            assert "detail" in data
+            assert "@mergington.edu" in data["detail"]
 
 
 class TestWorkflow:
