@@ -76,6 +76,27 @@ class TestSignupEndpoint:
         assert len(updated_participants) == initial_participants + 1
         assert email in updated_participants
     
+    def test_signup_with_invalid_email(self, client, reset_activities):
+        """Test signup with invalid email format"""
+        invalid_emails = [
+            "notanemail",
+            "missing@domain",
+            "@nodomain.com",
+            "no@domain",
+            "spaces in@email.com",
+            "missing.domain@",
+            "double@@domain.com"
+        ]
+        activity = "Chess Club"
+        
+        for invalid_email in invalid_emails:
+            response = client.post(f"/activities/{activity}/signup?email={invalid_email}")
+            assert response.status_code == status.HTTP_400_BAD_REQUEST
+            
+            data = response.json()
+            assert "detail" in data
+            assert "Invalid email format" in data["detail"]
+    
     def test_signup_for_nonexistent_activity(self, client, reset_activities):
         """Test signup for activity that doesn't exist"""
         email = "student@mergington.edu"
@@ -198,6 +219,25 @@ class TestUnregisterEndpoint:
         updated_participants = updated_response.json()[activity]["participants"]
         assert email not in updated_participants
         assert len(updated_participants) == len(initial_participants) - 1
+    
+    def test_unregister_with_invalid_email(self, client, reset_activities):
+        """Test unregister with invalid email format"""
+        invalid_emails = [
+            "notanemail",
+            "missing@domain",
+            "@nodomain.com",
+            "no@domain",
+            "spaces in@email.com"
+        ]
+        activity = "Chess Club"
+        
+        for invalid_email in invalid_emails:
+            response = client.delete(f"/activities/{activity}/unregister?email={invalid_email}")
+            assert response.status_code == status.HTTP_400_BAD_REQUEST
+            
+            data = response.json()
+            assert "detail" in data
+            assert "Invalid email format" in data["detail"]
     
     def test_unregister_from_nonexistent_activity(self, client, reset_activities):
         """Test unregister from activity that doesn't exist"""
